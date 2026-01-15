@@ -4,7 +4,7 @@ import { generateActivityBook } from './services/geminiService';
 import InputForm from './components/InputForm';
 import ActivityPage from './components/ActivityPage';
 import CoverPage from './components/CoverPage';
-import { Printer, RefreshCcw, ArrowLeft, Download, Ban as Banana } from 'lucide-react';
+import { Printer, RefreshCcw, ArrowLeft, Download, Ban as Banana, Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [bookData, setBookData] = useState<ActivityBookResponse | null>(null);
@@ -39,13 +39,11 @@ const App: React.FC = () => {
     if (!bookRef.current || !(window as any).html2pdf) return;
     
     const element = bookRef.current;
-    
-    // Add marker class to body for specific PDF styling overrides
     document.body.classList.add('generating-pdf');
 
     const opt = {
       margin: 0,
-      filename: `NanoBanana_ActivityBook.pdf`,
+      filename: `NanoBanana_${bookData?.meta.destinationCountry}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -65,7 +63,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen pb-12 bg-gray-50">
       
-      {/* Header - Hidden on Print */}
+      {/* Header */}
       <header className="bg-white border-b border-gray-200 py-4 px-6 mb-12 no-print sticky top-0 z-50">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -102,41 +100,41 @@ const App: React.FC = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4">
         
-        {/* Error Message */}
         {error && (
           <div className="max-w-2xl mx-auto mb-8 bg-red-50 border border-red-100 text-red-600 p-4 rounded-lg flex items-center gap-3 text-sm font-medium">
              <RefreshCcw className="w-4 h-4" /> {error}
           </div>
         )}
 
-        {/* Input View */}
         {!bookData && (
           <div className="py-4 animate-fade-in">
              <InputForm onSubmit={handleGenerate} isLoading={loading} />
+             {loading && (
+                 <div className="text-center mt-8 text-gray-500 text-sm">
+                     <p>Gathering cultural data and planning 42 pages...</p>
+                     <p className="text-xs mt-2 opacity-70">This takes a few seconds.</p>
+                 </div>
+             )}
           </div>
         )}
 
-        {/* Book View */}
         {bookData && (
           <div className="max-w-[210mm] mx-auto">
-             
-             <div className="no-print mb-8 bg-white p-6 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Your Activity Book is Ready</h2>
+             <div className="no-print mb-8 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                  <h2 className="text-lg font-bold text-gray-900">Book Structure Generated</h2>
                   <p className="text-gray-500 text-sm">
-                      Generate images for each page below, then print or save as PDF.
+                      Your {bookData.pages.length}-page book is ready. Scroll down to generate the artwork for each page individually.
                   </p>
-                </div>
              </div>
 
              <div className="print:w-full" ref={bookRef}>
                 <CoverPage meta={bookData.meta} />
-                
-                {bookData.activities.map((activity, index) => (
+                {bookData.pages.map((page, index) => (
                     <ActivityPage 
                         key={index} 
-                        activity={activity} 
-                        pageNumber={index + 1} 
+                        activity={page} 
+                        pageNumber={page.pageNumber} 
+                        referenceImage={bookData.meta.styleReferenceImage}
                     />
                 ))}
              </div>

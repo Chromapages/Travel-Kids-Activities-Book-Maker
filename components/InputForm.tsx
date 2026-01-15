@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ActivityInput } from '../types';
-import { ArrowRight, MapPin, Globe, User, BookOpen, Layers } from 'lucide-react';
+import { ArrowRight, Globe, User, BookOpen, Layers, ImagePlus, X } from 'lucide-react';
 
 interface InputFormProps {
   onSubmit: (data: ActivityInput) => void;
@@ -8,12 +8,14 @@ interface InputFormProps {
 }
 
 const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<ActivityInput>({
     age: 5,
     destinationCountry: '',
     destinationCity: '',
     languageLevel: 'pre_reader',
     activityMix: ['visual_puzzles', 'language_learning', 'drawing_coloring'],
+    styleReferenceImage: undefined
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -30,6 +32,22 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
         return { ...prev, activityMix: [...current, value] };
       }
     });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, styleReferenceImage: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImage = () => {
+    setFormData(prev => ({ ...prev, styleReferenceImage: undefined }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -76,6 +94,53 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
               />
             </div>
           </div>
+        </div>
+
+        <hr className="border-gray-100" />
+
+        {/* Style Reference - New Section */}
+        <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wider">
+                <ImagePlus className="w-4 h-4 text-gray-500" /> Visual Style Reference (Optional)
+            </div>
+            <div className="space-y-1.5">
+                <p className="text-xs text-gray-500 mb-2">Upload a photo to define the character style, art style, or color palette for the activity pages.</p>
+                
+                {!formData.styleReferenceImage ? (
+                    <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-black hover:bg-gray-50 transition-all group"
+                    >
+                        <ImagePlus className="w-8 h-8 text-gray-400 group-hover:text-black mb-2" />
+                        <span className="text-sm font-medium text-gray-500 group-hover:text-black">Click to upload reference image</span>
+                        <input 
+                            ref={fileInputRef}
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleImageUpload} 
+                            className="hidden" 
+                        />
+                    </div>
+                ) : (
+                    <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group">
+                        <img 
+                            src={formData.styleReferenceImage} 
+                            alt="Style Reference" 
+                            className="w-full h-full object-contain"
+                        />
+                        <button 
+                            type="button"
+                            onClick={clearImage}
+                            className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm p-2 text-center text-white text-xs font-medium">
+                            Style Reference Active
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
 
         <hr className="border-gray-100" />

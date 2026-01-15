@@ -1,30 +1,35 @@
 import React, { useState } from 'react';
-import { ActivityItem } from '../types';
+import { BookPage } from '../types';
 import { generateActivityImage } from '../services/geminiService';
 import { 
-  Pencil, Scissors, Brain, Eye, Sparkles, Loader2, Image as ImageIcon, 
-  RefreshCw, Settings2, RectangleVertical, RectangleHorizontal, Palette 
+  Image as ImageIcon, Loader2, RefreshCw, 
+  Map as MapIcon, Book, Stamp, Camera, Palette
 } from 'lucide-react';
 
 interface ActivityPageProps {
-  activity: ActivityItem;
+  activity: BookPage;
   pageNumber: number;
+  referenceImage?: string;
 }
 
-const ActivityPage: React.FC<ActivityPageProps> = ({ activity, pageNumber }) => {
+const ActivityPage: React.FC<ActivityPageProps> = ({ activity, pageNumber, referenceImage }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
-  // Image Generation Settings
-  const [style, setStyle] = useState<string>(activity.group === 'drawing_coloring' ? 'coloring_page' : 'illustration');
+  // Default Style Settings - Set to 3:4 Portrait for single page fit
+  const [style, setStyle] = useState<string>('coloring_page');
   const [aspectRatio, setAspectRatio] = useState<string>('3:4');
+  const [customInstructions, setCustomInstructions] = useState<string>('');
 
   const handleGenerateImage = async () => {
+    if (!activity.imagePrompt) return;
     setIsGeneratingImage(true);
     try {
-      // Include instructions in the prompt so the text appears in the image
-      const prompt = `${activity.layout_description}. ${activity.destination_hook}. The image must include the text: "${activity.instructions_child_friendly}"`;
-      const url = await generateActivityImage(prompt, style, aspectRatio);
+      let prompt = `${activity.title}. ${activity.imagePrompt}`;
+      if (customInstructions.trim()) {
+        prompt += ` IMPORTANT USER INSTRUCTION: ${customInstructions}`;
+      }
+      const url = await generateActivityImage(prompt, style, aspectRatio, referenceImage);
       setImageUrl(url);
     } catch (error) {
       console.error("Failed to generate image", error);
@@ -33,243 +38,109 @@ const ActivityPage: React.FC<ActivityPageProps> = ({ activity, pageNumber }) => 
     }
   };
 
-  const handleRegenerate = () => {
-    setImageUrl(null); // Clear image to show controls again
-  };
-
-  const getIcon = () => {
-    switch (activity.group) {
-      case 'drawing_coloring': return <Pencil className="w-6 h-6" />;
-      case 'visual_puzzles': return <Eye className="w-6 h-6" />;
-      case 'language_learning': return <Brain className="w-6 h-6" />;
-      default: return <Sparkles className="w-6 h-6" />;
-    }
-  };
-
-  const getColorClass = () => {
-    switch (activity.group) {
-      case 'drawing_coloring': return 'border-pink-300 bg-pink-50 text-pink-700';
-      case 'visual_puzzles': return 'border-blue-300 bg-blue-50 text-blue-700';
-      case 'language_learning': return 'border-green-300 bg-green-50 text-green-700';
-      default: return 'border-slate-300 bg-slate-50';
-    }
-  };
-
-  const renderContent = () => {
-    if (!activity.content) return null;
-    const { items, phrases, steps } = activity.content;
-
-    // Language Phrases
-    if (phrases && Array.isArray(phrases) && phrases.length > 0) {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full mt-6">
-          {phrases.map((p: any, i: number) => (
-            <div key={i} className="flex justify-between items-center bg-white p-3 rounded-lg border-2 border-slate-100 shadow-sm print:border-slate-200 pdf-no-shadow">
-              <div>
-                <div className="font-bold text-lg text-slate-800">{p.original}</div>
-                <div className="text-xs text-slate-500 italic">{p.pronunciation}</div>
-              </div>
-              <div className="text-indigo-600 font-bold ml-2">{p.english}</div>
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    // List of Items (Word Search, Scavenger Hunt)
-    if (items && Array.isArray(items) && items.length > 0) {
-      return (
-        <div className="w-full mt-6">
-          <p className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Find these!</p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            {items.map((item: string, i: number) => (
-              <span key={i} className="px-4 py-2 bg-slate-50 rounded-full border-2 border-slate-200 text-slate-700 font-comic font-bold print:border-slate-800">
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // Drawing Steps
-    if (steps && Array.isArray(steps) && steps.length > 0) {
-        return (
-            <div className="w-full mt-6 space-y-2">
-                 {steps.map((step: string, i: number) => (
-                    <div key={i} className="flex gap-3 items-start">
-                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">{i+1}</span>
-                        <p className="font-comic text-slate-700">{step}</p>
-                    </div>
-                 ))}
-            </div>
-        )
-    }
-
-    // Fallback for simple object dump if schema doesn't match above but is object
-    if (typeof activity.content === 'object' && Object.keys(activity.content).length > 0) {
-       return (
-         <div className="w-full mt-4">
-             <pre className="whitespace-pre-wrap font-comic text-sm text-center text-slate-500">
-                 {JSON.stringify(activity.content, null, 2).replace(/[\{\}"]/g, '')}
-             </pre>
-         </div>
-       );
-    }
-
-    return null;
-  };
-
   return (
-    <div className="w-full max-w-[210mm] min-h-[297mm] mx-auto bg-white p-8 md:p-12 shadow-sm border border-slate-200 relative print:shadow-none print:border-0 page-break mb-8 print:mb-0 pdf-no-shadow flex flex-col justify-between">
+    <div className="w-full max-w-[210mm] min-h-[297mm] mx-auto bg-white p-8 shadow-sm border border-slate-200 relative print:shadow-none print:border-0 page-break mb-8 print:mb-0 pdf-no-shadow flex flex-col overflow-hidden">
       
       {/* Top Section */}
-      <div>
-        {/* Header */}
-        <div className={`flex items-center justify-between border-b-4 pb-4 mb-6 ${getColorClass().split(' ')[0]}`}>
-            <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-full ${getColorClass()}`}>
-                {getIcon()}
-            </div>
+      <div className="flex-none mb-4">
+        <div className="flex items-center justify-between border-b-2 border-slate-100 pb-2 mb-2">
             <div>
-                <h3 className="text-2xl font-comic font-bold text-slate-800">{activity.title}</h3>
-                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{activity.type}</p>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{activity.section}</span>
+                <h3 className="text-xl font-bold text-slate-900 leading-tight">{activity.title}</h3>
             </div>
-            </div>
-            <div className="text-right hidden print:block pdf-visible">
-                <span className="text-xs text-slate-400">Nano Banana Travel</span>
+            <div className="text-slate-200 print:hidden">
+                {activity.layoutType === 'map' && <MapIcon />}
+                {activity.layoutType === 'passport' && <Stamp />}
+                {activity.layoutType === 'intro_text' && <Book />}
             </div>
         </div>
 
-        {/* Instructions */}
-        <div className="mb-8 bg-yellow-50 p-4 rounded-xl border border-yellow-200">
-            <p className="text-lg font-comic text-slate-700 leading-relaxed">
-            {activity.instructions_child_friendly}
-            </p>
-        </div>
+        {activity.instructions && (
+             <p className="text-sm md:text-base font-comic text-slate-600 leading-snug">{activity.instructions}</p>
+        )}
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-grow min-h-[400px] border-2 border-dashed border-slate-300 rounded-2xl p-6 flex flex-col items-center justify-center bg-white relative group">
-        
-        {/* Placeholder & Controls (Visible if no image) */}
-        {!imageUrl && (
-          <div className="text-center w-full max-w-md print:hidden pdf-hidden z-10">
-            <p className="text-slate-400 mb-6 italic">
-              "{activity.layout_description}"
-            </p>
+      {/* Main Content Area - Maximized Full Page Image */}
+      <div className="flex-grow relative flex flex-col items-center justify-center min-h-0">
+         <div className="w-full h-full flex flex-col items-center justify-center group relative">
             
-            {/* Image Controls */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 text-left shadow-sm">
-                <div className="flex items-center gap-2 mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <Settings2 className="w-4 h-4" /> Image Settings
-                </div>
-                
-                <div className="space-y-3">
-                    {/* Style Selector */}
-                    <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">Style</label>
-                        <div className="flex bg-white rounded-lg border border-slate-200 p-1">
-                            <button 
+            {!imageUrl ? (
+                <div className="w-full h-full border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center hover:border-slate-300 transition-colors">
+                    {/* Placeholder UI */}
+                    <div className="text-center w-full max-w-sm print:hidden pdf-hidden z-10 p-6 flex flex-col items-center">
+                        <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 border border-slate-100">
+                            <Camera className="w-7 h-7 text-slate-400" />
+                        </div>
+                        <h4 className="font-bold text-slate-700 mb-1">Generate Page</h4>
+                        <p className="text-slate-400 text-xs mb-6">Create custom AI artwork for this activity.</p>
+                        
+                        {/* Style Selector */}
+                        <div className="flex bg-slate-200/50 p-1 rounded-lg mb-4 w-full max-w-[240px]">
+                            <button
                                 onClick={() => setStyle('coloring_page')}
-                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-3 rounded-md text-xs font-bold transition-colors ${style === 'coloring_page' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                className={`flex-1 px-2 py-1.5 rounded-md text-[10px] md:text-xs font-bold transition-all ${style === 'coloring_page' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             >
-                                <Pencil className="w-3 h-3" /> Line Art
+                                B/W Line Art
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setStyle('illustration')}
-                                className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-3 rounded-md text-xs font-bold transition-colors ${style === 'illustration' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                                className={`flex-1 px-2 py-1.5 rounded-md text-[10px] md:text-xs font-bold transition-all ${style === 'illustration' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             >
-                                <Palette className="w-3 h-3" /> Color
+                                Full Color
                             </button>
                         </div>
-                    </div>
 
-                    {/* Aspect Ratio Selector */}
-                    <div>
-                        <label className="text-xs font-semibold text-slate-600 mb-1 block">Shape</label>
-                        <div className="flex gap-2">
-                             {[
-                                 { id: '3:4', icon: RectangleVertical, label: 'Portrait' },
-                                 { id: '4:3', icon: RectangleHorizontal, label: 'Landscape' }
-                             ].map((opt) => (
-                                 <button
-                                    key={opt.id}
-                                    onClick={() => setAspectRatio(opt.id)}
-                                    className={`flex-1 flex flex-col items-center justify-center py-2 rounded-lg border-2 transition-all ${aspectRatio === opt.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-300'}`}
-                                    title={opt.label}
-                                 >
-                                     <opt.icon className="w-4 h-4 mb-1" />
-                                     <span className="text-[10px] font-bold">{opt.id}</span>
-                                 </button>
-                             ))}
+                        {/* Custom Instructions */}
+                        <div className="w-full max-w-[240px] mb-4">
+                           <textarea
+                               value={customInstructions}
+                               onChange={(e) => setCustomInstructions(e.target.value)}
+                               placeholder="Optional: Add specific details (e.g., 'Add a cat', 'Make it sunny')..."
+                               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black bg-white resize-none text-slate-600 placeholder:text-slate-300"
+                               rows={2}
+                           />
                         </div>
+                        
+                        <button 
+                            onClick={handleGenerateImage}
+                            disabled={isGeneratingImage}
+                            className={`w-full px-6 py-3 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg hover:shadow-xl active:scale-95 text-sm ${style === 'illustration' ? 'bg-indigo-600' : 'bg-black'}`}
+                        >
+                            {isGeneratingImage ? <Loader2 className="animate-spin w-4 h-4"/> : <ImageIcon className="w-4 h-4"/>}
+                            Generate {style === 'illustration' ? 'Color' : 'B/W'} Art
+                        </button>
+                    </div>
+                     
+                    {/* Print Placeholder Text (if user prints without generating) */}
+                     <div className="hidden print:block pdf-visible absolute inset-0 flex items-center justify-center">
+                         <span className="text-slate-200 font-bold text-xl rotate-45 border-2 border-slate-200 p-4 rounded-lg">Draw Here</span>
+                     </div>
+                </div>
+            ) : (
+                <div className="relative w-full h-full flex items-center justify-center">
+                    <img 
+                        src={imageUrl} 
+                        alt="Activity Art" 
+                        className="w-full h-full object-contain max-h-[240mm]" 
+                    />
+                    <div className="absolute top-2 right-2 flex gap-2 print:hidden z-20">
+                         <button 
+                            onClick={() => setImageUrl(null)}
+                            className="p-2 bg-white/90 backdrop-blur rounded-full shadow-md text-slate-500 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-200"
+                            title="Regenerate Image"
+                        >
+                            <RefreshCw className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
-            </div>
-
-            <button 
-              onClick={handleGenerateImage}
-              disabled={isGeneratingImage}
-              className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-md disabled:bg-slate-300 disabled:cursor-not-allowed"
-            >
-              {isGeneratingImage ? <Loader2 className="animate-spin w-5 h-5"/> : <ImageIcon className="w-5 h-5"/>}
-              Generate Picture
-            </button>
-            <p className="text-xs text-slate-400 mt-2">Uses Nano Banana (Gemini) to draw.</p>
-          </div>
-        )}
-
-        {/* Generated Image */}
-        {imageUrl && (
-          <div className="w-full flex flex-col items-center mb-6 relative group">
-             <img 
-                src={imageUrl} 
-                alt="Activity" 
-                className="max-w-full max-h-[150mm] object-contain border-2 border-black shadow-sm" 
-            />
-            
-            <button 
-                onClick={handleRegenerate}
-                className="mt-3 px-4 py-2 bg-white text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-full text-xs font-bold flex items-center gap-2 transition-all print:hidden pdf-hidden shadow-sm"
-            >
-                <RefreshCw className="w-3 h-3" /> Regenerate Image
-            </button>
-          </div>
-        )}
-
-        {/* Structured Content Render */}
-        {renderContent()}
-
-        {/* Fallback layout description for print if image wasn't generated */}
-        <div className="hidden print:block pdf-visible absolute bottom-2 left-0 w-full text-center text-xs text-slate-300">
-           {activity.layout_description}
-        </div>
+            )}
+         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="mt-8 pt-4 border-t-2 border-slate-100 flex justify-between items-end text-sm text-slate-500">
-        <div>
-          {activity.materials_needed_simple.length > 0 && (
-            <div className="flex gap-2 items-center mb-1">
-               <span className="font-bold">You need:</span>
-               {activity.materials_needed_simple.join(', ')}
-            </div>
-          )}
-          {activity.safety_note && (
-             <div className="flex gap-1 items-center text-orange-500 font-bold text-xs">
-                <Scissors className="w-3 h-3" /> Note: {activity.safety_note}
-             </div>
-          )}
-        </div>
-        <div className="font-comic font-bold text-slate-300 text-xl">
-           Page {pageNumber}
-        </div>
-      </div>
-      
-      {/* Fun Fact Badge */}
-      <div className="absolute top-4 right-8 transform rotate-12 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-md print:shadow-none print:border print:border-yellow-600 pdf-no-shadow">
-        {activity.destination_hook}
+      {/* Footer */}
+      <div className="flex-none mt-4 pt-2 border-t-2 border-slate-100 flex justify-between items-end">
+        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Nano Banana Travel Series</div>
+        <div className="font-bold text-slate-900 text-lg w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full">{pageNumber}</div>
       </div>
 
     </div>

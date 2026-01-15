@@ -3,31 +3,55 @@ export interface ActivityInput {
   destinationCountry: string;
   destinationCity?: string;
   languageLevel: 'pre_reader' | 'early_reader' | 'confident_reader';
-  activityMix: string[];
+  activityMix: string[]; // Kept for compatibility, though spec overrides mostly
+  styleReferenceImage?: string;
 }
 
-export interface ActivityItem {
-  group: 'visual_puzzles' | 'language_learning' | 'drawing_coloring';
-  type: string;
+// Data returned from Gemini to fill the templates
+export interface DestinationContent {
+  continent: string;
+  description_kid_friendly: string;
+  mascot_name: string; // e.g., Bento
+  mascot_type: string; // e.g., Beagle
+  landmarks: { name: string; description: string; visual_prompt: string }[];
+  natural_wonders: { name: string; description: string; visual_prompt: string }[];
+  foods: { name: string; description: string; visual_prompt: string }[];
+  historical_figure: { name: string; role: string; visual_prompt: string };
+  historical_site: { name: string; description: string; visual_prompt: string };
+  transport: { name: string; type: string; visual_prompt: string }[];
+  language: { 
+    hello: { local: string; phonetic: string };
+    thank_you: { local: string; phonetic: string };
+    goodbye: { local: string; phonetic: string };
+  };
+  symbols: { flag_description: string; animal: string; flower: string };
+  fun_facts: string[];
+}
+
+export type PageLayoutType = 
+  | 'title_page' 
+  | 'intro_text' 
+  | 'passport' 
+  | 'map' 
+  | 'coloring' 
+  | 'maze' 
+  | 'matching' 
+  | 'drawing_prompt' 
+  | 'checklist' 
+  | 'journal';
+
+export interface BookPage {
+  pageNumber: number;
+  section: string;
   title: string;
-  destination_hook: string;
-  age_band: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  instructions_child_friendly: string;
-  target_skill: string | null;
-  layout_description: string;
-  content: any; // Flexible content based on type
-  materials_needed_simple: string[];
-  safety_note: string | null;
-  answer_key_description?: string;
+  layoutType: PageLayoutType;
+  instructions: string;
+  content: any; // Flexible content payload
+  imagePrompt?: string; // The prompt we will send to Image Gen
+  isVisual: boolean; // Does this page need an image generated?
 }
 
 export interface ActivityBookResponse {
   meta: ActivityInput;
-  activities: ActivityItem[];
-}
-
-export interface GeneratedImage {
-  activityTitle: string;
-  base64: string;
+  pages: BookPage[];
 }

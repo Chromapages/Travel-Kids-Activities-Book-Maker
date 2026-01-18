@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BookPage } from '../types';
 import { generateActivityImage } from '../services/geminiService';
@@ -67,7 +68,7 @@ const ActivityPage: React.FC<ActivityPageProps> = ({ activity, pageNumber, refer
             {!imageUrl ? (
                 <div className="w-full h-full border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center hover:border-slate-300 transition-colors">
                     {/* Placeholder UI */}
-                    <div className="text-center w-full max-w-sm print:hidden pdf-hidden z-10 p-6 flex flex-col items-center">
+                    <div className="text-center w-full max-sm print:hidden pdf-hidden z-10 p-6 flex flex-col items-center">
                         <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 border border-slate-100">
                             <Camera className="w-7 h-7 text-slate-400" />
                         </div>
@@ -139,7 +140,7 @@ const ActivityPage: React.FC<ActivityPageProps> = ({ activity, pageNumber, refer
 
       {/* Footer */}
       <div className="flex-none mt-4 pt-2 border-t-2 border-slate-100 flex justify-between items-end">
-        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Nano Banana Travel Series</div>
+        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Next Stop Adventure Series</div>
         <div className="font-bold text-slate-900 text-lg w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full">{pageNumber}</div>
       </div>
 

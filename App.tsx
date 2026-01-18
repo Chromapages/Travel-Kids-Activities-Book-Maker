@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ActivityInput, ActivityBookResponse } from './types';
 import { generateActivityBook } from './services/geminiService';
@@ -5,9 +6,9 @@ import InputForm from './components/InputForm';
 import ActivityPage from './components/ActivityPage';
 import CoverPage from './components/CoverPage';
 import { 
-  Printer, RefreshCcw, ArrowLeft, Download, Ban as Banana, 
+  Printer, RefreshCcw, ArrowLeft, Download, 
   Plane, Map, Luggage, Compass, Globe, Camera, Utensils, 
-  Landmark, Mountain, Palmtree, Building2, Search
+  Landmark, Mountain, Palmtree, Building2, Search, MapPin
 } from 'lucide-react';
 
 const LOADING_MESSAGES = [
@@ -186,7 +187,7 @@ const App: React.FC = () => {
 
     const opt = {
       margin: 0,
-      filename: `NanoBanana_${bookData?.meta.destinationCountry}.pdf`,
+      filename: `NextStopAdventure_${bookData?.meta.destinationCountry}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -211,8 +212,8 @@ const App: React.FC = () => {
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
              <div className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-               <span className="text-yellow-500"><Banana className="w-5 h-5"/></span>
-               Nano Banana
+               <span className="text-indigo-600"><MapPin className="w-5 h-5"/></span>
+               Next Stop Adventure
              </div>
           </div>
           {bookData && (

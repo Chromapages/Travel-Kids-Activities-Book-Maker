@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ActivityInput } from '../types';
-import { ArrowRight, Globe, User, BookOpen, Layers, ImagePlus, X } from 'lucide-react';
+import { ArrowRight, Globe, BookOpen, Layers, ImagePlus, X } from 'lucide-react';
 
 interface InputFormProps {
   onSubmit: (data: ActivityInput) => void;
@@ -10,10 +10,10 @@ interface InputFormProps {
 const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<ActivityInput>({
-    age: 5,
+    age: 7, // Hardcoded default since field is removed
     destinationCountry: '',
     destinationCity: '',
-    languageLevel: 'pre_reader',
+    languageLevel: 'early_reader', // Updated default
     activityMix: ['visual_puzzles', 'language_learning', 'drawing_coloring'],
     styleReferenceImage: undefined
   });
@@ -59,7 +59,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
     <div className="max-w-2xl mx-auto bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-gray-200">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Travel Activity Generator</h2>
-        <p className="text-gray-500 mt-2">Create a personalized, printable activity book for your child's upcoming trip.</p>
+        <p className="text-gray-500 mt-2">Create a personalized, printable activity book for your upcoming trip.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -98,7 +98,7 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
 
         <hr className="border-gray-100" />
 
-        {/* Style Reference - New Section */}
+        {/* Style Reference */}
         <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wider">
                 <ImagePlus className="w-4 h-4 text-gray-500" /> Visual Style Reference (Optional)
@@ -145,45 +145,24 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isLoading }) => {
 
         <hr className="border-gray-100" />
 
-        {/* Child Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Age */}
-            <div className="space-y-4">
-                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wider">
-                    <User className="w-4 h-4 text-gray-500" /> Child's Age
-                 </div>
-                 <div className="space-y-1.5">
-                    <input
-                    type="number"
-                    name="age"
-                    min="3"
-                    max="12"
-                    value={formData.age}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:bg-white transition-all"
-                    />
-                 </div>
+        {/* Reading Level Section */}
+        <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wider">
+                <BookOpen className="w-4 h-4 text-gray-500" /> Reading Level
             </div>
-
-            {/* Reading Level */}
-            <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 uppercase tracking-wider">
-                    <BookOpen className="w-4 h-4 text-gray-500" /> Reading Level
-                </div>
-                <div className="relative">
-                    <select
-                        name="languageLevel"
-                        value={formData.languageLevel}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-black focus:bg-white transition-all cursor-pointer"
-                    >
-                        <option value="pre_reader">Pre-Reader (Visual only)</option>
-                        <option value="early_reader">Early Reader (Simple words)</option>
-                        <option value="confident_reader">Confident Reader</option>
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                        <ArrowRight className="w-4 h-4 rotate-90" />
-                    </div>
+            <div className="relative max-w-md">
+                <select
+                    name="languageLevel"
+                    value={formData.languageLevel}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-black focus:bg-white transition-all cursor-pointer"
+                >
+                    <option value="pre_reader">Pre-Reader (Visual only)</option>
+                    <option value="early_reader">Early Reader (Simple words)</option>
+                    <option value="confident_reader">Confident Reader</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                    <ArrowRight className="w-4 h-4 rotate-90" />
                 </div>
             </div>
         </div>

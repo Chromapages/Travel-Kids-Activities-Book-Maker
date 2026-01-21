@@ -8,152 +8,110 @@ import CoverPage from './components/CoverPage';
 import { 
   Printer, RefreshCcw, ArrowLeft, Download, 
   Plane, Map, Luggage, Compass, Globe, Camera, Utensils, 
-  Landmark, Mountain, Palmtree, Building2, Search, MapPin
+  Landmark, Mountain, Palmtree, Building2, Search, MapPin, Sparkles, Loader2, Key, ShieldCheck
 } from 'lucide-react';
 
-const LOADING_MESSAGES = [
-  "Consulting the local experts...",
-  "Packing our virtual suitcases...",
-  "Mapping out the best landmarks...",
-  "Sketching the mascot's adventure...",
-  "Translating secret traveler codes...",
-  "Finding the yummiest local snacks...",
-  "Organizing 42 pages of fun...",
-  "Almost ready for departure!"
-];
-
-// Icons to cycle through during discovery
-const DISCOVERY_ICONS = [
-  Plane, Globe, Camera, Utensils, Landmark, Mountain, Map, Building2, Palmtree
+const LOADING_STAGES = [
+  { message: "Scouting the destination...", threshold: 15, icon: Plane },
+  { message: "Finding hidden local gems...", threshold: 35, icon: Search },
+  { message: "Drafting the adventure map...", threshold: 55, icon: Map },
+  { message: "Interviewing the local mascot...", threshold: 75, icon: Sparkles },
+  { message: "Translating secret traveler codes...", threshold: 90, icon: Globe },
+  { message: "Polishing all 42 magical pages...", threshold: 97, icon: Luggage },
+  { message: "Ready for departure! Almost there...", threshold: 100, icon: Sparkles }
 ];
 
 const LoadingState: React.FC<{ destination: string }> = ({ destination }) => {
   const [progress, setProgress] = useState(0);
-  const [index, setIndex] = useState(0);
-  const [showIcon, setShowIcon] = useState(true);
-
-  // Pick icons that might be more relevant based on text (simple heuristic)
-  const isTropical = /beach|island|hawaii|bali|caribbean|tropical/i.test(destination);
-  const isMountain = /alps|mountain|ski|hiking|swiss|himalaya/i.test(destination);
-  
-  const CurrentIcon = useMemo(() => {
-    // If we have a match, occasionally force the relevant icon
-    if (isTropical && index % 3 === 0) return Palmtree;
-    if (isMountain && index % 3 === 0) return Mountain;
-    return DISCOVERY_ICONS[index % DISCOVERY_ICONS.length];
-  }, [index, isTropical, isMountain]);
+  const [stageIndex, setStageIndex] = useState(0);
 
   useEffect(() => {
-    const progressInterval = setInterval(() => {
-      setProgress(prev => (prev < 95 ? prev + Math.random() * 3 : prev));
-    }, 500);
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        if (prev < 40) return prev + Math.random() * 8; 
+        if (prev < 80) return prev + Math.random() * 4; 
+        if (prev < 95) return prev + Math.random() * 1.5; 
+        if (prev < 99) return prev + 0.2; 
+        return prev;
+      });
+    }, 150);
 
-    const stepInterval = setInterval(() => {
-      setShowIcon(false);
-      setTimeout(() => {
-        setIndex(prev => (prev + 1) % LOADING_MESSAGES.length);
-        setShowIcon(true);
-      }, 300);
-    }, 2800);
-
-    return () => {
-      clearInterval(progressInterval);
-      clearInterval(stepInterval);
-    };
+    return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const nextStage = LOADING_STAGES.findIndex(s => progress < s.threshold);
+    if (nextStage !== -1 && nextStage !== stageIndex) {
+      setStageIndex(nextStage);
+    }
+  }, [progress, stageIndex]);
+
+  const CurrentIcon = LOADING_STAGES[stageIndex]?.icon || Sparkles;
+
   return (
-    <div className="max-w-md mx-auto py-16 px-8 text-center animate-fade-in bg-white rounded-3xl border border-gray-100 shadow-xl relative overflow-hidden">
-      {/* Background Decorative Blur */}
-      <div className="absolute -top-24 -right-24 w-48 h-48 bg-yellow-100 rounded-full blur-3xl opacity-50"></div>
-      <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+    <div className="max-w-2xl mx-auto py-12 px-8 text-center animate-fade-in bg-white rounded-3xl border border-gray-100 shadow-xl relative overflow-hidden">
+      <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+      <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-yellow-50 rounded-full blur-3xl opacity-50"></div>
 
-      <div className="relative mb-10 flex justify-center">
-        <div className={`w-28 h-28 bg-gradient-to-tr from-yellow-50 to-orange-50 rounded-full flex items-center justify-center shadow-inner transition-all duration-500 transform ${showIcon ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}`}>
-          <CurrentIcon className={`w-14 h-14 text-yellow-600 ${index % 2 === 0 ? 'animate-bounce' : 'animate-pulse'}`} />
-        </div>
-        
-        {/* Floating elements around the central icon */}
-        <div className="absolute top-0 right-8 animate-float-delayed">
-          <Search className="w-6 h-6 text-indigo-300" />
-        </div>
-        <div className="absolute bottom-2 left-10 animate-float">
-          <Compass className="w-7 h-7 text-indigo-400 animate-spin-slow" />
+      <div className="relative mb-8 flex justify-center">
+        <div className="w-28 h-28 bg-gradient-to-tr from-indigo-50 to-purple-50 rounded-full flex items-center justify-center shadow-inner relative">
+          <CurrentIcon className="w-14 h-14 text-indigo-600 animate-bounce" />
+          <div className="absolute inset-0 border-4 border-dashed border-indigo-200 rounded-full animate-spin-slow"></div>
         </div>
       </div>
 
-      <div className="space-y-1">
-        <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Researching {destination}</h3>
-        <p className="text-indigo-500 font-medium text-xs uppercase tracking-widest flex items-center justify-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-            </span>
-            AI Guide Active
-        </p>
+      <div className="space-y-2">
+        <h3 className="text-2xl font-black text-gray-900 tracking-tight">Exploring {destination}</h3>
+        <div className="flex items-center justify-center gap-2">
+           <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse uppercase">AI Guide Active</span>
+           <span className="text-indigo-400 font-bold text-[10px] uppercase tracking-widest">Searching the web...</span>
+        </div>
       </div>
 
-      <p className={`mt-6 text-gray-500 text-sm italic transition-all duration-500 min-h-[1.5rem] ${showIcon ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        "{LOADING_MESSAGES[index % LOADING_MESSAGES.length]}"
+      <p className="mt-8 text-gray-600 text-lg font-comic font-bold min-h-[1.5rem] italic">
+        "{LOADING_STAGES[stageIndex]?.message}"
       </p>
 
-      <div className="mt-10 relative">
+      <div className="mt-10 relative max-w-sm mx-auto">
         <div className="w-full bg-gray-100 rounded-full h-4 mb-3 overflow-hidden shadow-inner border border-gray-50">
           <div 
-            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 h-full transition-all duration-700 ease-out rounded-full relative"
+            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 h-full transition-all duration-300 ease-out rounded-full relative"
             style={{ width: `${progress}%` }}
           >
-            {/* Glossy overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent"></div>
-            {/* Animated scanning light */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-20 animate-scan"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-24 animate-scan"></div>
           </div>
         </div>
         
-        <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">
-          <span className="flex items-center gap-1.5"><Map className="w-3.5 h-3.5"/> Analysis</span>
-          <span>{Math.round(progress)}% Complete</span>
-          <span className="flex items-center gap-1.5">Structure <Luggage className="w-3.5 h-3.5"/></span>
+        <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
+          <span className="flex items-center gap-1.5"><Search className="w-3 h-3"/> Research</span>
+          <span className="text-indigo-600">{Math.floor(progress)}%</span>
+          <span className="flex items-center gap-1.5">Creation <Sparkles className="w-3 h-3"/></span>
         </div>
       </div>
-
-      <style>{`
-        @keyframes scan {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(400%); }
-        }
-        .animate-scan {
-          animation: scan 2s infinite linear;
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0); }
-          50% { transform: translateY(-10px) rotate(10deg); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        .animate-float-delayed {
-          animation: float 3.5s ease-in-out infinite reverse;
-          animation-delay: 0.5s;
-        }
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 12s linear infinite;
-        }
-      `}</style>
     </div>
   );
 };
 
 const App: React.FC = () => {
+  const [isKeySelected, setIsKeySelected] = useState<boolean | null>(null);
   const [bookData, setBookData] = useState<ActivityBookResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [pendingDestination, setPendingDestination] = useState("");
   const [error, setError] = useState<string | null>(null);
   const bookRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkKey = async () => {
+      const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+      setIsKeySelected(hasKey);
+    };
+    checkKey();
+  }, []);
+
+  const handleOpenKey = async () => {
+    await (window as any).aistudio.openSelectKey();
+    setIsKeySelected(true);
+  };
 
   const handleGenerate = async (input: ActivityInput) => {
     setLoading(true);
@@ -162,9 +120,14 @@ const App: React.FC = () => {
     try {
       const data = await generateActivityBook(input);
       setBookData(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Unable to generate content. Please check your API configuration and try again.");
+      if (err.message?.includes("Requested entity was not found")) {
+        setIsKeySelected(false);
+        setError("Your Pro API Key needs to be re-selected. Please check your passport!");
+      } else {
+        setError("Our travel guides hit a roadblock! Please check your connection or try again in a moment.");
+      }
     } finally {
       setLoading(false);
     }
@@ -175,109 +138,113 @@ const App: React.FC = () => {
     setError(null);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => { window.print(); };
 
   const handleDownloadPDF = async () => {
     if (!bookRef.current || !(window as any).html2pdf) return;
-    
     const element = bookRef.current;
     document.body.classList.add('generating-pdf');
-
     const opt = {
       margin: 0,
-      filename: `NextStopAdventure_${bookData?.meta.destinationCountry}.pdf`,
+      filename: `YoungExplorersGuide_${bookData?.meta.destinationCountry}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
-
-    try {
-      await (window as any).html2pdf().set(opt).from(element).save();
-    } catch (e) {
-      console.error("PDF Generation Error:", e);
-      alert("Could not generate PDF. Please try the Print button instead.");
-    } finally {
-      document.body.classList.remove('generating-pdf');
-    }
+    try { await (window as any).html2pdf().set(opt).from(element).save(); } 
+    catch (e) { console.error(e); } 
+    finally { document.body.classList.remove('generating-pdf'); }
   };
 
+  if (isKeySelected === false) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-[2rem] shadow-2xl p-10 text-center border border-slate-200">
+          <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-3">
+            <Key className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Passport Check!</h2>
+          <p className="text-slate-500 mb-8 font-medium leading-relaxed">
+            To generate high-quality activity art with Gemini 3 Pro, you'll need to select a paid API key from your traveler toolkit.
+          </p>
+          <button 
+            onClick={handleOpenKey}
+            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-3"
+          >
+            <ShieldCheck className="w-5 h-5" /> Select My API Key
+          </button>
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <a 
+              href="https://ai.google.dev/gemini-api/docs/billing" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs font-bold text-indigo-500 hover:text-indigo-600 underline uppercase tracking-widest"
+            >
+              Learn about billing & keys
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen pb-12 bg-gray-50">
-      
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 py-4 px-6 mb-12 no-print sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-             <div className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-               <span className="text-indigo-600"><MapPin className="w-5 h-5"/></span>
-               Next Stop Adventure
-             </div>
+    <div className="min-h-screen pb-12 bg-slate-100">
+      <header className="bg-white border-b border-gray-200 py-4 px-6 mb-8 no-print sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+             <span className="text-indigo-600"><MapPin className="w-5 h-5"/></span>
+             Young Explorers Guide
           </div>
           {bookData && (
-            <div className="flex gap-3">
-              <button 
-                onClick={handleReset}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-black flex items-center gap-2 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" /> New Trip
+            <div className="flex gap-2">
+              <button onClick={handleReset} className="px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-black uppercase tracking-widest transition-colors">New Trip</button>
+              <button onClick={handleDownloadPDF} className="px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 flex items-center gap-2 shadow-lg transition-all">
+                <Download className="w-3.5 h-3.5" /> Save PDF
               </button>
-              <button 
-                onClick={handleDownloadPDF}
-                className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-800 flex items-center gap-2 shadow-sm transition-colors"
-              >
-                <Download className="w-4 h-4" /> Save PDF
-              </button>
-              <button 
-                onClick={handlePrint}
-                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm transition-colors"
-              >
-                <Printer className="w-4 h-4" /> Print
+              <button onClick={handlePrint} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 flex items-center gap-2 shadow-sm transition-all">
+                <Printer className="w-3.5 h-3.5" /> Print
               </button>
             </div>
           )}
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4">
-        
         {error && (
-          <div className="max-w-2xl mx-auto mb-8 bg-red-50 border border-red-100 text-red-600 p-4 rounded-lg flex items-center gap-3 text-sm font-medium">
-             <RefreshCcw className="w-4 h-4" /> {error}
+          <div className="max-w-2xl mx-auto mb-8 bg-red-50 border border-red-200 text-red-700 p-5 rounded-2xl flex items-center gap-4 text-sm font-bold shadow-sm">
+             <RefreshCcw className="w-5 h-5" />
+             <p>{error}</p>
           </div>
         )}
 
-        {!bookData && (
-          <div className="py-4 animate-fade-in">
-             {!loading ? (
-                <InputForm onSubmit={handleGenerate} isLoading={loading} />
-             ) : (
-                <LoadingState destination={pendingDestination} />
-             )}
+        {!bookData ? (
+          <div className="py-4">
+             {!loading ? <InputForm onSubmit={handleGenerate} isLoading={loading} /> : <LoadingState destination={pendingDestination} />}
           </div>
-        )}
-
-        {bookData && (
-          <div className="max-w-[210mm] mx-auto">
-             <div className="no-print mb-8 bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                  <h2 className="text-lg font-bold text-gray-900">Book Structure Generated</h2>
-                  <p className="text-gray-500 text-sm">
-                      Your {bookData.pages.length}-page book is ready. Scroll down to generate the artwork for each page individually.
-                  </p>
+        ) : (
+          <div className="max-w-[100%] mx-auto pb-24">
+             <div className="no-print max-w-2xl mx-auto mb-12 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Your Book is Ready!</h2>
+                    <p className="text-gray-500 text-xs mt-1 uppercase font-bold tracking-widest">Generate art and scroll through your pages.</p>
+                  </div>
+                  <div className="bg-indigo-50 text-indigo-600 font-black px-4 py-2 rounded-xl border border-indigo-100 uppercase tracking-widest text-xs">
+                    {bookData.meta.destinationCountry}
+                  </div>
              </div>
 
-             <div className="print:w-full" ref={bookRef}>
+             <div className="book-container flex flex-col items-center gap-8 print:gap-0" ref={bookRef}>
                 <CoverPage meta={bookData.meta} />
+                
                 {bookData.pages.map((page, index) => (
-                    <ActivityPage 
-                        key={index} 
-                        activity={page} 
-                        pageNumber={page.pageNumber} 
-                        referenceImage={bookData.meta.styleReferenceImage}
-                    />
+                  <ActivityPage 
+                      key={index} 
+                      activity={page} 
+                      pageNumber={page.pageNumber} 
+                      referenceImage={bookData.meta.styleReferenceImage}
+                  />
                 ))}
              </div>
           </div>

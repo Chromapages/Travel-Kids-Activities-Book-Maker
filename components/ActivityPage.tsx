@@ -16,10 +16,7 @@ interface ActivityPageProps {
 const ActivityPage: React.FC<ActivityPageProps> = ({ activity, pageNumber, referenceImage }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  
-  // Default Style Settings - Set to 3:4 Portrait for single page fit
   const [style, setStyle] = useState<string>('coloring_page');
-  const [aspectRatio, setAspectRatio] = useState<string>('3:4');
   const [customInstructions, setCustomInstructions] = useState<string>('');
 
   const handleGenerateImage = async () => {
@@ -30,107 +27,102 @@ const ActivityPage: React.FC<ActivityPageProps> = ({ activity, pageNumber, refer
       if (customInstructions.trim()) {
         prompt += ` IMPORTANT USER INSTRUCTION: ${customInstructions}`;
       }
-      const url = await generateActivityImage(prompt, style, aspectRatio, referenceImage);
+      // Request 3:4 aspect ratio to fill a significant portion of the A4 page vertically.
+      const url = await generateActivityImage(prompt, style, '3:4', referenceImage);
       setImageUrl(url);
     } catch (error) {
-      console.error("Failed to generate image", error);
+      console.error(error);
     } finally {
       setIsGeneratingImage(false);
     }
   };
 
   return (
-    <div className="w-full max-w-[210mm] min-h-[297mm] mx-auto bg-white p-8 shadow-sm border border-slate-200 relative print:shadow-none print:border-0 page-break mb-8 print:mb-0 pdf-no-shadow flex flex-col overflow-hidden">
+    <div className="w-full max-w-[210mm] min-h-[297mm] mx-auto bg-white p-8 md:p-12 shadow-lg border border-slate-200 relative print:shadow-none print:border-0 page-break print:mb-0 pdf-no-shadow flex flex-col transition-all duration-500 rounded-none">
       
-      {/* Top Section */}
       <div className="flex-none mb-4">
         <div className="flex items-center justify-between border-b-2 border-slate-100 pb-2 mb-2">
             <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{activity.section}</span>
-                <h3 className="text-xl font-bold text-slate-900 leading-tight">{activity.title}</h3>
+                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">{activity.section}</span>
+                <h3 className="text-2xl font-black text-slate-900 leading-tight">{activity.title}</h3>
             </div>
-            <div className="text-slate-200 print:hidden">
-                {activity.layoutType === 'map' && <MapIcon />}
-                {activity.layoutType === 'passport' && <Stamp />}
-                {activity.layoutType === 'intro_text' && <Book />}
+            <div className="text-slate-300 print:hidden opacity-50">
+                {activity.layoutType === 'map' && <MapIcon className="w-6 h-6"/>}
+                {activity.layoutType === 'passport' && <Stamp className="w-6 h-6"/>}
+                {activity.layoutType === 'intro_text' && <Book className="w-6 h-6"/>}
             </div>
         </div>
 
         {activity.instructions && (
-             <p className="text-sm md:text-base font-comic text-slate-600 leading-snug">{activity.instructions}</p>
+             <p className="text-sm font-comic font-bold text-slate-500 leading-relaxed bg-slate-50/50 p-2 rounded-none border-l-4 border-indigo-200 italic">{activity.instructions}</p>
         )}
       </div>
 
-      {/* Main Content Area - Maximized Full Page Image */}
+      {/* 
+          Image Area:
+          Container and Image both match 3:4 aspect ratio for a perfect vertical fit.
+          All rounded corners removed for a sharp, clean appearance.
+      */}
       <div className="flex-grow relative flex flex-col items-center justify-center min-h-0">
-         <div className="w-full h-full flex flex-col items-center justify-center group relative">
-            
+         <div className="w-full flex flex-col items-center justify-center group relative">
             {!imageUrl ? (
-                <div className="w-full h-full border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 flex flex-col items-center justify-center hover:border-slate-300 transition-colors">
-                    {/* Placeholder UI */}
-                    <div className="text-center w-full max-sm print:hidden pdf-hidden z-10 p-6 flex flex-col items-center">
-                        <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 border border-slate-100">
-                            <Camera className="w-7 h-7 text-slate-400" />
+                <div className="w-full aspect-[3/4] border-2 border-dashed border-slate-200 rounded-none bg-slate-50/30 flex flex-col items-center justify-center hover:border-indigo-200 hover:bg-indigo-50/10 transition-all duration-300">
+                    <div className="text-center w-full max-w-xs print:hidden pdf-hidden z-10 p-6 flex flex-col items-center">
+                        <div className="w-14 h-14 bg-white rounded-none flex items-center justify-center shadow-lg mb-6 border border-slate-100 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                            <Camera className="w-7 h-7 text-indigo-500" />
                         </div>
-                        <h4 className="font-bold text-slate-700 mb-1">Generate Page</h4>
-                        <p className="text-slate-400 text-xs mb-6">Create custom AI artwork for this activity.</p>
+                        <h4 className="font-black text-slate-800 mb-2 uppercase tracking-[0.2em] text-[10px]">Create Page Art</h4>
                         
-                        {/* Style Selector */}
-                        <div className="flex bg-slate-200/50 p-1 rounded-lg mb-4 w-full max-w-[240px]">
+                        <div className="flex bg-slate-200/50 p-1 rounded-none mb-4 w-full">
                             <button
                                 onClick={() => setStyle('coloring_page')}
-                                className={`flex-1 px-2 py-1.5 rounded-md text-[10px] md:text-xs font-bold transition-all ${style === 'coloring_page' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`flex-1 px-3 py-2 rounded-none text-[10px] font-black uppercase transition-all ${style === 'coloring_page' ? 'bg-black text-white shadow-lg' : 'text-slate-500'}`}
                             >
-                                B/W Line Art
+                                Line Art
                             </button>
                             <button
                                 onClick={() => setStyle('illustration')}
-                                className={`flex-1 px-2 py-1.5 rounded-md text-[10px] md:text-xs font-bold transition-all ${style === 'illustration' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`flex-1 px-3 py-2 rounded-none text-[10px] font-black uppercase transition-all ${style === 'illustration' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500'}`}
                             >
                                 Full Color
                             </button>
                         </div>
 
-                        {/* Custom Instructions */}
-                        <div className="w-full max-w-[240px] mb-4">
-                           <textarea
-                               value={customInstructions}
-                               onChange={(e) => setCustomInstructions(e.target.value)}
-                               placeholder="Optional: Add specific details (e.g., 'Add a cat', 'Make it sunny')..."
-                               className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black bg-white resize-none text-slate-600 placeholder:text-slate-300"
-                               rows={2}
-                           />
-                        </div>
+                        <textarea
+                            value={customInstructions}
+                            onChange={(e) => setCustomInstructions(e.target.value)}
+                            placeholder="Personalize the drawing..."
+                            className="w-full px-4 py-3 text-xs border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white resize-none text-slate-600 mb-4 h-16 shadow-inner font-medium"
+                        />
                         
                         <button 
                             onClick={handleGenerateImage}
                             disabled={isGeneratingImage}
-                            className={`w-full px-6 py-3 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg hover:shadow-xl active:scale-95 text-sm ${style === 'illustration' ? 'bg-indigo-600' : 'bg-black'}`}
+                            className={`w-full py-4 text-white rounded-none font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all active:scale-95 ${style === 'illustration' ? 'bg-indigo-600 shadow-indigo-200' : 'bg-slate-900 shadow-slate-200'} shadow-2xl`}
                         >
-                            {isGeneratingImage ? <Loader2 className="animate-spin w-4 h-4"/> : <ImageIcon className="w-4 h-4"/>}
-                            Generate {style === 'illustration' ? 'Color' : 'B/W'} Art
+                            {isGeneratingImage ? <Loader2 className="animate-spin w-4 h-4"/> : <Palette className="w-4 h-4"/>}
+                            {isGeneratingImage ? 'Drawing...' : `Generate Page Art`}
                         </button>
                     </div>
-                     
-                    {/* Print Placeholder Text (if user prints without generating) */}
                      <div className="hidden print:block pdf-visible absolute inset-0 flex items-center justify-center">
-                         <span className="text-slate-200 font-bold text-xl rotate-45 border-2 border-slate-200 p-4 rounded-lg">Draw Here</span>
+                         <div className="border-4 border-slate-100 border-dashed rounded-none w-[80%] h-[80%] flex items-center justify-center">
+                            <span className="text-slate-100 font-black text-5xl rotate-12 opacity-40 tracking-tighter uppercase">Activity Area</span>
+                         </div>
                      </div>
                 </div>
             ) : (
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full aspect-[3/4] rounded-none overflow-hidden shadow-2xl group/img border border-slate-100 bg-white">
                     <img 
                         src={imageUrl} 
                         alt="Activity Art" 
-                        className="w-full h-full object-contain max-h-[240mm]" 
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover/img:scale-105" 
                     />
-                    <div className="absolute top-2 right-2 flex gap-2 print:hidden z-20">
-                         <button 
-                            onClick={() => setImageUrl(null)}
-                            className="p-2 bg-white/90 backdrop-blur rounded-full shadow-md text-slate-500 hover:text-red-500 hover:bg-red-50 transition-all border border-slate-200"
-                            title="Regenerate Image"
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center no-print backdrop-blur-sm">
+                        <button 
+                            onClick={() => setImageUrl(null)} 
+                            className="p-5 bg-white rounded-full shadow-2xl text-slate-900 hover:text-red-500 transition-all border border-slate-100 hover:scale-110 active:scale-90"
                         >
-                            <RefreshCw className="w-4 h-4" />
+                            <RefreshCw className="w-8 h-8" />
                         </button>
                     </div>
                 </div>
@@ -138,12 +130,10 @@ const ActivityPage: React.FC<ActivityPageProps> = ({ activity, pageNumber, refer
          </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex-none mt-4 pt-2 border-t-2 border-slate-100 flex justify-between items-end">
-        <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Next Stop Adventure Series</div>
-        <div className="font-bold text-slate-900 text-lg w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full">{pageNumber}</div>
+      <div className="flex-none mt-4 pt-4 border-t-2 border-slate-100 flex justify-between items-center">
+        <div className="text-[10px] text-slate-300 font-black uppercase tracking-[0.4em] font-sans">Next Stop Adventure</div>
+        <div className="font-black text-slate-800 text-xl w-10 h-10 flex items-center justify-center bg-slate-50 rounded-none shadow-inner border border-slate-100">{pageNumber}</div>
       </div>
-
     </div>
   );
 };

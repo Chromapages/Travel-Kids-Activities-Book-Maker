@@ -3,29 +3,60 @@ export interface ActivityInput {
   destinationCountry: string;
   destinationCity?: string;
   languageLevel: 'pre_reader' | 'early_reader' | 'confident_reader';
-  activityMix: string[]; // Kept for compatibility, though spec overrides mostly
+  activityMix: string[];
   styleReferenceImage?: string;
 }
 
-// Data returned from Gemini to fill the templates
 export interface DestinationContent {
   continent: string;
-  description_kid_friendly: string;
-  mascot_name: string; // e.g., Bento
-  mascot_type: string; // e.g., Beagle
-  landmarks: { name: string; description: string; visual_prompt: string }[];
-  natural_wonders: { name: string; description: string; visual_prompt: string }[];
-  foods: { name: string; description: string; visual_prompt: string }[];
-  historical_figure: { name: string; role: string; visual_prompt: string };
-  historical_site: { name: string; description: string; visual_prompt: string };
-  transport: { name: string; type: string; visual_prompt: string }[];
-  language: { 
-    hello: { local: string; phonetic: string };
-    thank_you: { local: string; phonetic: string };
-    goodbye: { local: string; phonetic: string };
-  };
-  symbols: { flag_description: string; animal: string; flower: string };
+  catchy_title: string;
+  introduction: string;
   fun_facts: string[];
+  landmarks: { 
+    name: string; 
+    description: string; 
+    activity_type: string;
+    visual_prompt: string;
+  }[];
+  traditions: {
+    name: string;
+    description: string;
+    activity_idea: string;
+    visual_prompt: string;
+  }[];
+  foods: { 
+    name: string; 
+    description: string; 
+    visual_prompt: string;
+  }[];
+  language: { 
+    phrases: { local: string; english: string; phonetic: string }[];
+    game_idea: string;
+  };
+  history: {
+    event_or_symbol: string;
+    summary: string;
+    activity_idea: string;
+    visual_prompt: string;
+  }[];
+  wildlife: {
+    name: string;
+    description: string;
+    activity_idea: string;
+    visual_prompt: string;
+  }[];
+  mascot_name: string;
+  mascot_type: string;
+  symbols: {
+    flag_description: string;
+    animal: string;
+    flower: string;
+  };
+  transport: {
+    name: string;
+    type: string;
+    visual_prompt: string;
+  }[];
 }
 
 export type PageLayoutType = 
@@ -46,9 +77,9 @@ export interface BookPage {
   title: string;
   layoutType: PageLayoutType;
   instructions: string;
-  content: any; // Flexible content payload
-  imagePrompt?: string; // The prompt we will send to Image Gen
-  isVisual: boolean; // Does this page need an image generated?
+  content: any;
+  imagePrompt?: string;
+  isVisual: boolean;
 }
 
 export interface ActivityBookResponse {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, signInWithGoogle } from '../lib/firebase';
-import { Mail, Lock, Loader2, AlertCircle, User as UserIcon } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle, User as UserIcon, Check } from 'lucide-react';
 
 const SignupPage: React.FC = () => {
     const [name, setName] = useState('');
